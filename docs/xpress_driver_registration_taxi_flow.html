@@ -214,10 +214,6 @@ input:focus, select:focus { outline: none; border-color: #4f46e5; box-shadow: 0 
 <div class="view-container" id="view5">
 <div class="section-title"><i class="fas fa-file-upload"></i><span>Document Upload</span></div>
 <p style="color: #6b7280; margin-bottom: 14px;">Upload all required documents. Each document can have multiple files (front/back, multi-page). Max file size: 8MB each.</p>
-<div id="taxiSkipDocsNotice" class="age-warning" style="display:none;">
-  <div style="display:flex;align-items:center;"><i class="fas fa-info-circle"></i><div><strong>4W Taxi Requirement Update</strong><p style="margin-top:5px;font-size:14px;">For 4W Taxi applications, OR/CR, Vehicle Photos, and PA/CPC uploads are not required in this prototype flow.</p></div></div>
-</div>
-
 <div class="document-section" id="license-section">
 <div class="document-header"><div class="document-title-row"><div class="document-title">Driver's License</div></div><div class="document-required">Required</div></div>
 <div class="document-description">Upload front and back of your valid driver's license</div>
@@ -707,10 +703,8 @@ if (ageWarning) ageWarning.style.display = needsFitToDrive ? 'block' : 'none';
 function updateValidationSummary() {
 const summary = document.getElementById('validation-summary');
 const requiredDocs = ['license', 'nbi'];
-if (!isTaxi4W()) {
-  requiredDocs.push('orcr', 'vehicle');
-  if (appState.vehicleType === '4W') requiredDocs.push('pa-cpc');
-}
+requiredDocs.push('orcr', 'vehicle');
+if (appState.vehicleType === '4W') requiredDocs.push('pa-cpc');
 const needsFitToDrive = (appState.vehicleType === '4W' && appState.age >= 60) || (appState.vehicleType === '2W' && appState.age >= 55);
 if (needsFitToDrive) requiredDocs.push('fit-to-drive');
 if (appState.serviceType === 'Taxi') requiredDocs.push('medical-exam', 'sss', 'tin', 'pagibig', 'philhealth');
@@ -807,12 +801,6 @@ function updateTaxiDocumentsVisibility() {
   const licenseDesc = document.getElementById('licenseDescription');
   if (licenseDesc) licenseDesc.textContent = taxiMode ? "Upload front and back of your valid PROFESSIONAL driver's license" : "Upload front and back of your valid driver's license";
   document.getElementById('license-section')?.classList.toggle('taxi-only', taxiMode);
-  const skipNotice = document.getElementById('taxiSkipDocsNotice');
-  if (skipNotice) skipNotice.style.display = taxiMode ? 'block' : 'none';
-  ['orcr-section', 'vehicle-section', 'pa-cpc-section'].forEach(id => {
-    const node = document.getElementById(id);
-    if (node) node.classList.toggle('hidden', taxiMode);
-  });
 }
 function quickFillDemoData() {
   document.getElementById('mobileNumber').value = '0917 123 4567';
