@@ -1,0 +1,385 @@
+Background
+Current driver registration is messy and time-consuming in the driver app, and the Compliance team struggles to verify applicants efficiently. The process creates delays, inconsistent encoded data, and repeated back-and-forth when documents are unclear or incorrect. We need a simpler onboarding flow that reduces driver effort, standardizes verification/encoding on the web, and speeds up endorsement for activation while still supporting reupload loops and training-center guidance during verification.
+Based on observation drivers who newly installed the driver app takes them 30 minutes to an hour to finish the submission of requirements in the app. This is a burden to both drivers and compliance team.
+
+---
+Objective
+Simplify driver onboarding from account creation to activation by:
+- Streamlining the mobile app into a guided, required-only flow up to Submit for Review
+- Providing a web verification portal where Compliance can review, correct typos (except mobile number), encode key information from documents, approve/reject with reasons, and set application source
+- Supporting a clean reject → reupload → resubmission → reverify loop
+- Allowing applicants to visit training centers even while verification is ongoing via an in-app training center list and help contact number
+
+---
+Target Audience
+Driver Applicants (2W / 4W): need a fast, guided registration and clear reupload instructions when documents are rejected
+Compliance / Verifiers: need a shared queue, document viewer, structured encoding fields, reject reasons, and endorsement gating
+Mobility / Ops Admins: maintain training center schedules/contact details and ensure smooth activation handoff
+
+---
+Measure of Success
+Cut down driver registration time (account creation → submit for review) from 30mins to an hour to 5–10 minutes.
+Cut down compliance happy flow time (open applicant → endorse for activation) to 5–10 minutes for clean applications.
+
+---
+Scope and Out of Scope
+Mobile App Scope (Driver App)
+1. Account Creation (OTP)
+- Mobile number entry → request OTP → OTP entry screen.
+- OTP UX enhancement: remove “Verify” / manual verification button.
+  - Auto-advance to the next step once 6 digits are entered and the OTP is correct.
+  - Show inline error for incorrect OTP and allow re-entry.
+  - Keep OTP timer/expiry behavior and “Change Number” option.
+2. Personal Details (Required)
+- Full name
+- Date of birth
+- Full address
+- Email address
+- Emergency contact name
+- Emergency contact mobile number
+- (Mobile number remains the signup identifier / non-editable after account creation)
+3. Vehicle Type Selection (Required)
+- Select 2W or 4W (drives required document checklist + conditional requirements).
+4. Service Selection (post vehicle type)
+- Show: Ride, Send, Eats, Mart
+- Non-Ride services may be visible but disabled (backend-configurable for future enablement without app update).
+5. Document Upload (Required + Conditional)
+- Required document slots based on vehicle type + rules:
+  - Driver’s License (Front + Back)
+  - OR/CR (+ conditional ownership supporting docs)
+  - NBI
+  - Vehicle Photos (Front + Back)
+  - PA/CPC (4W only)
+  - Fit to Drive (conditional by age + vehicle type)
+  - Previous App Experience proof (if present in the flow/prototype)
+- Upload rules:
+  - Multi-file per slot (front/back, multi-page)
+  - Accepted: JPG / PNG / PDF
+  - Max size: 8MB per file
+  - Block submission until all required/conditional slots are completed
+6. Document Guides w/ Info Icons (NEW)
+- Every document type must have an info (ℹ️) icon that opens a guide panel/modal containing:
+  - Clear do/don’t instructions (photo clarity, angle, completeness, expiry visibility, etc.)
+  - Example images (good vs bad samples) per document type
+- Guides are view-only and accessible before upload (to reduce rejection loops).
+7. Submit for Review
+- Single action submits application and moves status to Pending Review / Pending Verification.
+8. Pending Review Status Screen (View 6) — Read-Only Submission Summary (NEW)
+- Show “Application Submitted / Pending Review” status messaging.
+- Read-only submission summary: display a complete list of all uploaded documents (all slots + files).
+- Click-to-view (NEW): each file name is clickable to open the actual uploaded image/PDF in a viewer.
+- Viewer is strictly read-only (no replace/delete/upload from this screen).
+- Training Centers list + Support/Help contacts remain visible here.
+9. Rejected → Reupload Flow
+- If Compliance rejects any document slot:
+  - Status becomes Needs Document Reupload
+  - Show rejected document(s) + reason(s)
+  - Allow reupload only for rejected slots (same upload rules)
+10. Resubmitted Successfully Screen (View 8) — Read-Only Submission Summary (NEW)
+- Confirmation messaging that documents were resubmitted.
+- Same read-only submission summary behavior as View 6:
+  - List all uploaded docs/files
+  - File name click opens read-only viewer (no modification)
+- Training Centers + Support/Help contacts remain accessible.
+Web Scope (Compliance / Mobility Portal)
+- Applicant Work Queues (Tabs)
+  - New: all newly submitted applicants pending initial verification
+  - My Applications: shared “in-progress” list (no claiming)
+  - Rejected: all applicants with rejected documents / needs reupload
+  - Resubmission: applicants who reuploaded and resubmitted documents for review
+- Shared Queue Model (No Claiming)
+  - All compliance users can see all applicants in all tabs
+  - Any compliance user may continue processing an application previously handled by another compliance user
+- Audit Visibility
+  - Each tab table includes Last Updated By column (who last saved changes on the application)
+  - (Recommended) Include Last Updated At timestamp
+- Applicant Profile (Autofilled + Editable)
+  - Autofill all driver-submitted details
+  - Compliance can edit fields for typos/formatting except mobile number (read-only)
+- Document Viewer (Multi-file)
+  - View all uploaded documents per slot
+  - Support preview of JPG/PNG/PDF
+  - Clearly show latest replacement uploads for resubmissions
+- Compliance Encoding & Verification (Per Document)
+  - Compliance encodes and verifies each slot, then sets status Approved/Rejected.
+- Driver’s License
+  - Encode: License number, license type (Pro/Non-Pro), expiry date (date picker), optional issue date
+- OR/CR & Ownership
+  - Encode base fields: Plate number, vehicle make, vehicle model, build year, color, registration expiry date
+  - Set ownership status: Owned / Not owned / Second hand
+  - If Not owned:
+    - Require supporting doc: Authorization Letter or Notarized SPA
+    - Encode registered owner name
+  - If Second hand:
+    - Encode transfer doc type (Deed of Sale / Cert of Sale / Cert of Repossession)
+    - Encode transfer doc date
+- NBI
+  - Encode: NBI reference/ID number, NBI expiry/validity end date
+- Vehicle Photos
+  - Visual check only; status Approved/Rejected (no extra fields)
+- PA/CPC (4W)
+  - Encode: PA/CPC number, validity/expiry date, optional operator/franchise name
+- Fit to Drive Certificate (Conditional)
+  - Required if 4W age ≥ 60 OR 2W age ≥ 55
+  - Encode: doctor name, clinic/hospital, date of exam, validity/expiry end date (date picker), optional certificate number, optional remarks
+- Application Source (Required)
+  - Compliance must select application source during verification:
+    - Online / Event / Walk-in
+  - Required before endorsement
+- Reject with Reasons (Sync to Driver App)
+  - Reject any document slot with predefined reasons and/or custom reason text
+  - Reasons sync to driver app per rejected document slot
+- Endorsement Gate
+  - System must block Endorse for Activation unless:
+    - All required/applicable document slots have a status
+    - All required encoded fields are complete
+    - Conditional docs satisfied (Fit to Drive when applicable)
+    - Application Source selected
+- Resubmission Reverification
+  - Resubmitted applicants appear in Resubmission tab
+  - Compliance reviews replacement documents and may reject again or endorse for activation
+- Training Center Management (Shown in Driver App)
+  - Compliance/Mobility can CRUD training centers:
+    - Name, address, schedule(s), active/inactive
+    - Contact number(s) (mobile/landline)
+    - Email address
+  - Portal can manage Support Contacts shown in the driver app:
+    - Hotline number
+    - Support mobile number
+    - Support email
+  - Updates reflect automatically in the driver app Pending Verification screen
+
+---
+Assumptions
+- Age is computed from Date of Birth and used to determine Fit-to-Drive requirement.
+- All mobile onboarding fields are mandatory and validated both client-side and server-side.
+- Document upload supports multi-file per slot and enforces accepted types (JPG/PNG/PDF) and 8MB per file.
+- Rejection reasons reliably sync to the driver app and map to the correct document slot.
+- Training centers and support contacts are centrally configured in the web portal and consumed by the driver app in real time (or near real time).
+- “My Applications” tab is a shared operational queue label (not tied to ownership/claiming).
+
+---
+Requirements and Acceptance Criteria
+Driver App
+Story: As a driver applicant, I want to create my account using mobile OTP with an auto-advance verification flow so that I can start registration quickly with fewer manual steps.
+Acceptance Criteria:
+- Given the user is on the registration screen, When the user enters a valid mobile number and requests an OTP, Then the app should send an OTP and display the OTP entry screen.
+- Given the user is on the OTP entry screen, When the user enters a 6-digit OTP, Then the app should auto-verify the OTP (no manual “Verify” button) and show a loading/validating state.
+- Given the entered OTP is correct, When verification succeeds, Then the app should create/verify the account and automatically proceed to the onboarding flow (next screen).
+- Given the entered OTP is incorrect, When verification fails, Then the app should show an inline error, clear or allow correction of the OTP field, and remain on the OTP screen.
+- Given the OTP is expired (timer ends), When the user taps “Resend OTP”, Then the app should request a new OTP and restart the expiry timer.
+- Given the user is on the OTP entry screen, When the user taps “Change Number”, Then the app should return to mobile number entry and invalidate the previous OTP attempt.
+
+---
+Story: As a driver applicant, I want to complete my required personal details so that the platform has the minimum information needed to process my application.
+Acceptance Criteria:
+- Given the user is on the Personal Details screen, When the user proceeds, Then the app should require all fields: full name, date of birth, full address, email, emergency contact name, and emergency contact mobile number.
+- Given any required field is blank or invalid, When the user taps Continue, Then the app should show field-level errors and block progress.
+- Given all required fields are valid, When the user taps Continue, Then the app should save the details and proceed to the Vehicle Type screen.
+
+---
+Story: As a driver applicant, I want to select my vehicle type so that the app can determine the correct next steps and document requirements for my application.
+Acceptance Criteria:
+- Given the user is on the Vehicle Type screen, When the user selects a vehicle type, Then the app should allow selecting 2W or 4W only.
+- Given the user has not selected a vehicle type, When the user taps Continue, Then the app should block progress and show an error indicating vehicle type is required.
+- Given the user selected a vehicle type, When the user taps Continue, Then the app should proceed to Service Selection and update the document checklist logic based on the selected vehicle type.
+
+---
+Story: As a driver applicant, I want to select the service types I want to apply for so that my application matches the services currently allowed by the platform.
+Acceptance Criteria:
+- Given the user selected a vehicle type, When the user proceeds to Service Selection, Then the app should show Ride, Send, Eats, Mart.
+- Given service availability is restricted by backend configuration, When the screen loads, Then the app should disable or hide unavailable services accordingly.
+- Given the user proceeds, When required services/selections are not satisfied by rules, Then the app should block progress and show an appropriate message.
+
+---
+Story: As a driver applicant, I want to see a document checklist based on my submitted information so that I know exactly which documents I need to complete my application.
+Acceptance Criteria:
+- Given the user has entered Personal Details + Vehicle Type, When the Documents screen loads, Then the app should display the required document slots based on rules (vehicle type and any conditional requirements such as Fit-to-Drive thresholds, ownership conditions, etc.).
+- Given a condition changes (e.g., ownership type selection), When the user updates the condition, Then the app should dynamically show/hide the affected required document slots.
+- Given required documents are missing, When the user attempts to submit, Then the app should block submission and clearly indicate which document slots are incomplete.
+
+---
+Story: As a driver applicant, I want to view document guides with instructions and examples so that I can upload compliant files and avoid rejection.
+Acceptance Criteria:
+- Given the user is on the Documents screen, When the user views any document slot, Then an info (ℹ️) icon must be available for that document type.
+- Given the user taps the info icon, When the guide opens, Then the app should show:
+  - clear instructions (what to capture / common rejection reasons),
+  - accepted file types and size limits,
+  - and example images (at least “good” vs “bad”).
+- Given the guide is open, When the user closes it, Then the user should return to the same document slot without losing progress.
+- Given the user is in Pending Review or Resubmitted Successfully states, When the user opens a guide (if exposed), Then it must be read-only and must not allow uploads from within the guide.
+
+---
+Story: As a driver applicant, I want to upload my documents with clear file rules so that I can submit the correct files successfully.
+Acceptance Criteria:
+- Given the user is on the Documents screen, When the user uploads files to a document slot, Then the app should support multiple files per slot where applicable.
+- Given the user selects an unsupported file type, When the upload is attempted, Then the app should reject the file and show an error (accepted: JPG/PNG/PDF).
+- Given the user selects a file larger than 8MB, When the upload is attempted, Then the app should reject the file and show an error (max 8MB each).
+- Given a file uploads successfully, When the upload completes, Then the app should show the file name in the uploaded list for that slot.
+
+---
+Story: As a driver applicant, I want to upload my Driver’s License requirements completely so that my license document can be reviewed for verification.
+Acceptance Criteria:
+- Given the Driver’s License slot is required, When the user uploads the required sides/pages, Then the slot should be marked complete.
+- Given the user has not uploaded all required sides/pages, When the user attempts to submit, Then submission should be blocked and the slot should be flagged as incomplete.
+
+---
+Story: As a driver applicant, I want the OR/CR requirements to change based on my ownership condition so that I can submit the correct supporting documents.
+Acceptance Criteria:
+- Given OR/CR is required, When the user selects an ownership condition (e.g., owned / second-hand / not owned), Then the app should show the correct supporting document requirements for that condition.
+- Given required OR/CR and supporting documents are incomplete, When the user attempts to submit, Then submission should be blocked and the missing slots should be highlighted.
+
+---
+Story: As a driver applicant, I want to upload my NBI document so that I can complete the required verification requirements.
+Acceptance Criteria:
+- Given NBI is required, When the user uploads a valid file, Then the slot should be marked complete.
+- Given the user has not uploaded NBI, When the user attempts to submit, Then submission should be blocked.
+
+---
+Story: As a driver applicant, I want to upload front and back vehicle photos so that the platform can verify my vehicle requirement.
+Acceptance Criteria:
+- Given vehicle photos are required, When the user uploads front and back photos, Then the slot should be marked complete.
+- Given one side is missing, When the user attempts to submit, Then submission should be blocked and show which side is missing.
+
+---
+Story: As a 4W driver applicant, I want to upload my PA/CPC document so that I can complete the additional requirement for 4W verification.
+Acceptance Criteria:
+- Given the applicant selected 4W, When the Documents screen loads, Then PA/CPC must be shown as required.
+- Given PA/CPC is missing, When the user attempts to submit, Then submission should be blocked.
+
+---
+Story: As a driver applicant, I want to declare my previous experience with other apps and upload proof when applicable so that the platform can consider my declared experience during review.
+Acceptance Criteria:
+- Given the previous experience section is available, When the user uploads proof images/PDFs, Then the files should be listed under that section.
+- Given the section is optional, When the user leaves it blank, Then the app should still allow submission as long as all required documents are complete.
+
+---
+Story: As a driver applicant, I want to submit my completed application for review so that the compliance team can start verifying my documents.
+Acceptance Criteria:
+- Given all required documents are complete, When the user taps “Submit for Review”, Then the app should submit the application and change status to Pending Verification.
+- Given submission succeeds, When the status updates, Then the app should navigate to the Pending Verification screen (View 6).
+- Given submission fails due to network/server error, When the user submits, Then the app should show an error state and allow retry without losing uploaded files.
+
+---
+Story: As a driver applicant with a pending application, I want to see training centers, support contacts, and my submitted files in read-only mode so that I know what to do next while waiting for verification.
+Acceptance Criteria:
+- Given the application status is Pending Verification, When the user opens the status screen (View 6), Then the app should display the Training Centers list with name, address, and schedule(s).
+- Given the status screen loads, When contact info is available, Then the app should display Hotline/Support details and allow tap-to-call and tap-to-email.
+- Given the user is on View 6, When the screen loads, Then the app must display a read-only Submission Summary listing all uploaded document slots and their uploaded files.
+- Given a file is listed in the summary, When the user taps the file name, Then the app should open a viewer showing the actual uploaded image/PDF.
+- Given the user is viewing a file from the summary, When the viewer is open, Then the user must not be able to replace/delete/upload (read-only mode).
+
+---
+Story: As a driver applicant whose documents were rejected, I want to see which files were rejected and why so that I know what needs to be corrected.
+Acceptance Criteria:
+- Given the application status is Rejected / Needs Reupload, When the user opens the status screen, Then the app should show which document slots are rejected and the rejection reason per slot.
+- Given multiple documents are rejected, When the screen loads, Then all rejected slots and reasons should be visible and scannable.
+
+---
+Story: As a driver applicant whose application needs reupload, I want to replace only the rejected documents and resubmit them so that I can continue the application without redoing everything.
+Acceptance Criteria:
+- Given the status is Needs Reupload, When the user uploads replacement files to rejected slots, Then the app should allow updating only the rejected slots and keep non-rejected slots locked.
+- Given rejected slots are still incomplete, When the user attempts to resubmit, Then the app should block resubmission and highlight missing rejected-slot uploads.
+- Given the user resubmits successfully, When the backend confirms, Then the app should navigate to Resubmitted Successfully (View 8).
+
+---
+Story: As a driver applicant who successfully resubmitted documents, I want to see training centers, support contacts, and my submitted files in read-only mode so that I know the application is back in review and I still have access to reference information.
+Acceptance Criteria:
+- Given the application status is Resubmitted Successfully, When the user opens View 8, Then the app should display the Training Centers list and support contact details (tap-to-call/email).
+- Given the user is on View 8, When the screen loads, Then the app must display a read-only Submission Summary listing all uploaded document slots and their uploaded files.
+- Given a file is listed in the summary, When the user taps the file name, Then the app should open a viewer showing the actual uploaded image/PDF in read-only mode (no replace/delete/upload).
+
+---
+Web
+Story: As a compliance user, I want to view applicants in separate work queues so that I can easily find which applications are new, in progress, rejected, or resubmitted.
+Acceptance Criteria:
+- Given the compliance user is logged in, When the user opens the New tab, Then the portal should display all newly submitted applicants pending initial verification.
+- Given the compliance user is logged in, When the user opens the My Applications tab, Then the portal should display all in-progress applicants (shared queue; not user-owned).
+- Given the compliance user is logged in, When the user opens the Rejected tab, Then the portal should display all rejected applicants across all compliance users.
+- Given the compliance user is logged in, When the user opens the Resubmission tab, Then the portal should display all applicants who reuploaded and resubmitted documents for review.
+Story: As a compliance user, I want to see who last updated an application and when so that I can track accountability and recent activity across applicant records.
+Acceptance Criteria:
+- Given the compliance user is viewing any tab table, When the list loads, Then each applicant row should display Last Updated By.
+- Given the compliance user updates any part of an applicant record (profile edits, document status, encoded fields, rejection reasons, application source, endorsement), When the save succeeds, Then Last Updated By should update to the logged-in compliance user.
+- Given the compliance user is viewing any tab table, When the list loads, Then the portal should display Last Updated At (timestamp) per applicant row.
+Story: As a compliance user, I want to open an applicant record and see the submitted details already autofilled so that I can review the application faster without re-encoding basic information.
+Acceptance Criteria:
+- Given the compliance user opens an applicant record, When the profile loads, Then the portal should autofill the applicant’s submitted details from the driver app.
+- Given the compliance user opens an applicant record, When the profile loads, Then the portal should show the applicant’s selected vehicle type and service.
+Story: As a compliance user, I want to correct applicant profile typos except for the mobile number so that the official record can be cleaned up without changing the applicant’s unique login identifier.
+Acceptance Criteria:
+- Given the compliance user is viewing the applicant profile, When the user edits any field and clicks Save, Then the portal should store the updates as the official record.
+- Given the compliance user is viewing the applicant profile, When the user attempts to edit the mobile number, Then the portal should keep it read-only and prevent changes.
+Story: As a compliance user, I want to view all uploaded files under each document slot so that I can review every submitted page, side, or attachment properly.
+Acceptance Criteria:
+- Given the compliance user opens an applicant record, When the user views any document slot, Then the portal should display all uploaded files under that slot (multi-page/front-back).
+- Given a file is available, When the compliance user clicks the file, Then the portal should open a larger preview viewer for review.
+Story: As a compliance user, I want to capture the application source during verification so that the platform records how the applicant entered the registration funnel.
+Acceptance Criteria:
+- Given the compliance user is reviewing an applicant, When the user reaches the verification section, Then the portal should require selecting Application Source: Online, Event, or Walk-in.
+- Given Application Source is not selected, When the compliance user attempts to Endorse for Activation, Then the portal should block endorsement and show an error indicating Application Source is required.
+- Given Application Source is selected and saved, When the applicant record is viewed again, Then the selected value should persist and be displayed.
+Story: As a compliance user, I want to encode and verify Driver’s License details so that I can determine whether the applicant’s license requirement is valid and reviewable.
+Acceptance Criteria:
+- Given the compliance user is viewing the Driver’s License slot, When the user encodes License number and License type (Pro/Non-Pro) and selects Expiry date via date picker (optional issue date), Then the system should save the values and allow setting status Approved/Rejected.
+Story: As a compliance user, I want to encode OR/CR details and ownership-related information so that I can verify the applicant’s vehicle documents based on the declared ownership condition.
+Acceptance Criteria:
+- Given the compliance user is viewing the OR/CR slot, When the user encodes Plate number, vehicle make, vehicle model, build year, color, registration expiry date, Then the system should save the values.
+- Given the compliance user is viewing the OR/CR slot, When the user sets Ownership status to Owned / Not owned / Second hand, Then the system should save the selection.
+- Given Ownership status is Not owned, When the compliance user reviews supporting docs, Then the portal should require at least one submitted and viewable document: Authorization Letter or Notarized SPA.
+- Given Ownership status is Not owned, When the compliance user encodes the registered owner name, Then the portal should require and save it.
+- Given Ownership status is Second hand, When the compliance user selects transfer doc type (Deed of Sale / Cert of Sale / Cert of Repossession) and encodes transfer doc date, Then the portal should require and save them.
+Story: As a compliance user, I want to encode and verify NBI details so that I can validate the applicant’s NBI requirement during document review.
+Acceptance Criteria:
+- Given the compliance user is viewing the NBI slot, When the user encodes NBI reference/ID number and NBI expiry/validity end date, Then the system should save the values and allow setting status Approved/Rejected.
+Story: As a compliance user, I want to review vehicle photos and set a verification status so that I can approve or reject that requirement without additional encoded fields.
+Acceptance Criteria:
+- Given the compliance user is viewing the Vehicle Photos slot, When the user reviews the photos, Then the portal should allow setting status Approved/Rejected with no required encoded fields.
+Story: As a compliance user, I want to encode and verify PA/CPC details for 4W applicants only so that the correct vehicle-type-specific requirement is enforced before endorsement.
+Acceptance Criteria:
+- Given the applicant vehicle type is 4W, When the compliance user views the PA/CPC slot, Then the portal should require encoding PA/CPC number and validity/expiry date (optional operator/franchise name) before allowing approval.
+- Given the applicant vehicle type is 2W, When the compliance user views the applicant record, Then PA/CPC should not be required for endorsement.
+Story: As a compliance user, I want the system to require a Fit to Drive certificate based on applicant age and vehicle type so that age-based compliance rules are enforced correctly.
+Acceptance Criteria:
+- Given the applicant vehicle type is 4W and age is 60 or above, When the compliance user opens the applicant record, Then the portal should require the Fit to Drive Certificate slot.
+- Given the applicant vehicle type is 2W and age is 55 or above, When the compliance user opens the applicant record, Then the portal should require the Fit to Drive Certificate slot.
+Story: As a compliance user, I want to view the applicant’s declared experience and any uploaded proof so that I can consider prior platform experience during verification.
+Story: View applicant’s declared experience and uploaded proof
+Acceptance Criteria:
+- Given the compliance user opens an applicant record, When the profile loads, Then the portal should display the applicant’s response to “Have previous experience working for other apps?” (Yes/No).
+- Given the applicant selected Yes, When the compliance user views the applicant record, Then the portal should display an Experience Proof document slot containing all uploaded files (screenshots) and allow previewing them (multi-file supported).
+- Given the applicant selected No, When the compliance user views the applicant record, Then the portal should display No experience proof required and no upload should be required for endorsement.
+Story: As a compliance user, I want to reject document slots with clear reasons that sync back to the driver app so that the applicant knows exactly what to fix.
+Acceptance Criteria:
+- Given the compliance user is reviewing any document slot, When the user sets status to Rejected, Then the portal should require selecting predefined reason(s) and/or entering a custom reason.
+- Given the rejection is saved, When the driver opens the driver app Documents screen, Then the driver should see the same rejected document(s) and reason(s).
+- Given one or more required documents are rejected, When the compliance user saves, Then the application should appear in the Rejected tab.
+Story: As a compliance user, I want to review resubmitted applications and their replacement files so that I can decide whether the applicant can now proceed to endorsement.
+Acceptance Criteria:
+- Given a driver reuploads rejected document(s) and resubmits, When the resubmission is received, Then the application should appear in the Resubmission tab.
+- Given the compliance user opens a resubmitted application, When the document slots are viewed, Then the portal should clearly display the latest replacement uploads for review.
+- Given the compliance user approves all required documents and completes required encoded fields, When the compliance user proceeds, Then the portal should allow endorsement.
+- Given the compliance user rejects any required document again, When the compliance user saves, Then the application should return to the Rejected tab and sync reasons to the driver app.
+Story: As a compliance user, I want endorsement to be blocked until all required verification steps are complete so that only fully reviewed applicants move forward for activation.
+Acceptance Criteria:
+- Given the compliance user attempts to endorse an applicant, When any required document slot is missing a status (Approved/Rejected), Then the portal should block endorsement and show which slot(s) are incomplete.
+- Given the compliance user attempts to endorse an applicant, When any required encoded field is missing, Then the portal should block endorsement and show which field(s) are required.
+- Given the compliance user attempts to endorse an applicant, When Application Source is not selected, Then the portal should block endorsement and show an error.
+- Given all required document slots are Approved, required fields are encoded, and Application Source is selected, When the compliance user clicks Endorse for Activation, Then the applicant status should change to Endorsed for Activation.
+Story: As a compliance user, I want the portal to prevent simultaneous verification of the same application so that multiple reviewers do not accidentally work on the same record at the same time.
+Acceptance Criteria:
+- Given two or more compliance users are viewing the My Applications tab, When compliance user A opens an application record for verification, Then the system should mark the application as currently being verified by user A.
+- Given two or more compliance users are viewing the Resubmission tab, When compliance user A opens an application record to review resubmitted documents, Then the system should mark the application as currently being reviewed by user A.
+- Given an application is currently being verified/reviewed by compliance user A, When compliance user B attempts to open the same application, Then the portal should block access and display: “This is currently being verified by another member. Please check out another application.” (or equivalent).
+- Given compliance user A exits the application record (closes the record or becomes inactive past a timeout), When the lock is released, Then other compliance users should be able to open the application.
+
+Story: As an authorized compliance or mobility user, I want to manage training centers shown in the driver app so that applicants always see the latest training center information while waiting for verification.
+Acceptance Criteria:
+- Given the compliance/mobility user is authorized, When the user creates a training center with name, address, schedule(s), contact number(s), and email, Then the training center should be saved and published to the driver app.
+- Given the compliance/mobility user updates a training center’s details, When the update is saved, Then the driver app should reflect the changes.
+- Given the compliance/mobility user deletes or disables a training center, When the change is saved, Then the training center should no longer appear in the driver app.
+Story: As an authorized compliance or mobility user, I want to manage support contacts shown in the driver app so that applicants can always reach the correct support channels during verification.
+Acceptance Criteria:
+- Given the compliance/mobility user is authorized, When the user sets or updates the hotline number, Then the driver app should display the updated hotline on the Pending Verification screen.
+- Given the compliance/mobility user is authorized, When the user sets or updates the support mobile number, Then the driver app should display the updated support mobile number.
+- Given the compliance/mobility user is authorized, When the user sets or updates the support email, Then the driver app should display the updated support email.
