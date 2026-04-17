@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Xpress Driver Registration - Taxi Flow</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+/* === BASE STYLES === */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; }
+body { background: #f5f5f7; color: #333; max-width: 500px; margin: 0 auto; min-height: 100vh; background-color: #fff; box-shadow: 0 0 30px rgba(0,0,0,0.1); }
+.app-container { position: relative; min-height: 100vh; }
+.header { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; padding: 20px; text-align: center; border-radius: 0 0 20px 20px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); }
+.header h1 { font-size: 22px; margin-bottom: 5px; }
+.header p { font-size: 14px; opacity: 0.9; }
+.progress-bar { display: flex; justify-content: space-between; padding: 20px; background: #fff; border-bottom: 1px solid #eee; }
+.progress-step { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.step-circle { width: 32px; height: 32px; border-radius: 50%; background: #e5e7eb; color: #6b7280; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 5px; transition: all 0.3s; }
+.step-circle.active { background: #4f46e5; color: #fff; }
+.step-circle.completed { background: #10b981; color: #fff; }
+.step-label { font-size: 12px; color: #9ca3af; text-align: center; }
+.step-label.active { color: #4f46e5; font-weight: 600; }
+.view-container { padding: 20px; display: none; }
+.view-container.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.section-title { font-size: 18px; margin-bottom: 20px; color: #111827; display: flex; align-items: center; }
+.section-title i { margin-right: 10px; color: #4f46e5; }
+.form-group { margin-bottom: 20px; }
+label { display: block; margin-bottom: 8px; font-weight: 500; color: #374151; }
+input, select { width: 100%; padding: 12px 15px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 16px; transition: border 0.3s; }
+input:focus, select:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+.input-with-icon { position: relative; }
+.input-with-icon i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+.error-message { color: #ef4444; font-size: 14px; margin-top: 5px; display: none; }
+.btn { background: #4f46e5; color: #fff; border: none; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: 600; width: 100%; cursor: pointer; transition: background 0.3s; display: flex; align-items: center; justify-content: center; }
+.btn:hover { background: #4338ca; }
+.btn:disabled { background: #9ca3af; cursor: not-allowed; }
+.btn i { margin-left: 8px; }
+.btn-secondary { background: #6b7280; }
+.btn-secondary:hover { background: #4b5563; }
+.btn-success { background: #10b981; }
+.btn-success:hover { background: #0da271; }
+.button-group { display: flex; gap: 10px; margin-top: 30px; }
+
+/* === SERVICE OPTIONS === */
+.service-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 10px; }
+.service-option { border: 2px solid #e5e7eb; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s; position: relative; }
+.service-option:hover { border-color: #c7d2fe; }
+.service-option.selected { border-color: #4f46e5; background-color: #eef2ff; }
+.service-option.disabled { opacity: 0.5; cursor: not-allowed; background-color: #f9fafb; }
+.service-option.taxi { border-color: #f59e0b; }
+.service-option.taxi.selected { border-color: #d97706; background-color: #fef3c7; }
+.service-option i { font-size: 28px; margin-bottom: 10px; color: #4f46e5; }
+.service-option.taxi i { color: #f59e0b; }
+.service-option.disabled i { color: #9ca3af; }
+.service-name { font-weight: 600; margin-bottom: 5px; }
+.service-status { font-size: 12px; color: #6b7280; }
+.service-status.disabled { color: #ef4444; }
+.service-badge { position: absolute; top: 8px; right: 8px; background: #f59e0b; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+
+/* === DOCUMENT SECTIONS === */
+.document-section { background: #f9fafb; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid #e5e7eb; }
+.document-section.taxi-only { border-left: 4px solid #f59e0b; background: #fffbeb; }
+.document-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
+.document-title-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.document-title { font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.document-required { font-size: 12px; background: #ef4444; color: #fff; padding: 3px 8px; border-radius: 12px; white-space: nowrap; }
+.document-required.optional { background: #6b7280; }
+.document-required.conditional { background: #f59e0b; }
+.document-required.taxi { background: #f59e0b; }
+.info-btn { border: none; background: transparent; color: #4f46e5; cursor: pointer; padding: 4px 6px; border-radius: 8px; flex-shrink: 0; }
+.info-btn:hover { background: #eef2ff; }
+.document-description { font-size: 14px; color: #6b7280; margin-bottom: 15px; }
+
+/* === UPLOAD AREAS === */
+.upload-area { border: 2px dashed #d1d5db; border-radius: 10px; padding: 25px; text-align: center; cursor: pointer; transition: border 0.3s; margin-bottom: 10px; background: #fff; }
+.upload-area:hover { border-color: #9ca3af; }
+.upload-area i { font-size: 40px; color: #9ca3af; margin-bottom: 10px; }
+.upload-text { font-weight: 500; margin-bottom: 5px; }
+.upload-subtext { font-size: 14px; color: #6b7280; }
+.uploaded-files { margin-top: 15px; }
+.uploaded-file { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 15px; display: flex; align-items: center; margin-bottom: 8px; gap: 10px; }
+.uploaded-file i { color: #10b981; font-size: 18px; }
+.file-name { flex: 1; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-size { font-size: 12px; color: #6b7280; white-space: nowrap; }
+.remove-file { color: #ef4444; margin-left: 6px; cursor: pointer; }
+.file-name.clickable { cursor: pointer; color: #4f46e5; }
+.file-name.clickable:hover { text-decoration: underline; }
+
+/* === HELPERS === */
+.hidden { display: none; }
+.age-warning { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 15px; margin-bottom: 20px; }
+.age-warning i { color: #f59e0b; margin-right: 10px; }
+.otp-instruction { background: #f0f9ff; border-radius: 10px; padding: 15px; margin-top: 20px; border: 1px solid #bae6fd; font-size: 14px; color: #0369a1; }
+.otp-instruction i { color: #0ea5e9; margin-right: 10px; }
+.timer { text-align: center; margin-top: 15px; color: #6b7280; font-size: 14px; }
+.resend-otp { text-align: center; margin-top: 20px; }
+.resend-link { color: #4f46e5; text-decoration: none; font-weight: 500; cursor: pointer; display: inline-block; padding: 8px 16px; border-radius: 6px; transition: background 0.2s; }
+.resend-link:hover { text-decoration: underline; background: #f5f3ff; }
+.resend-link.disabled { color: #9ca3af; cursor: not-allowed; background: none; }
+.mobile-display { background: #f9fafb; border-radius: 10px; padding: 15px; text-align: center; margin-bottom: 20px; border: 1px solid #e5e7eb; }
+.mobile-display .label { font-size: 14px; color: #6b7280; margin-bottom: 5px; }
+.mobile-display .number { font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 10px; }
+.ownership-instruction { background: #f0f9ff; border-radius: 10px; padding: 12px; margin-top: 10px; border: 1px solid #bae6fd; font-size: 14px; color: #0369a1; display: none; }
+
+.notice {
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px dashed #c7d2fe;
+  background: #eef2ff;
+  color: #3730a3;
+  border-radius: 10px;
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+<div class="app-container">
+<div class="header">
+<h1>Xpress Driver Registration</h1>
+<p>Complete your application in 5-10 minutes</p>
+</div>
+
+<div class="progress-bar">
+<div class="progress-step"><div class="step-circle active" id="step1">1</div><div class="step-label active">Account</div></div>
+<div class="progress-step"><div class="step-circle" id="step2">2</div><div class="step-label">Personal Details</div></div>
+<div class="progress-step"><div class="step-circle" id="step3">3</div><div class="step-label">Vehicle & Service</div></div>
+<div class="progress-step"><div class="step-circle" id="step4">4</div><div class="step-label">Documents</div></div>
+<div class="progress-step"><div class="step-circle" id="step5">5</div><div class="step-label">Submit</div></div>
+</div>
+
+<!-- View 1: Mobile Number Entry -->
+<div class="view-container active" id="view1">
+<div class="section-title"><i class="fas fa-mobile-alt"></i><span>Mobile Number Verification</span></div>
+<div class="form-group">
+<label for="mobileNumber">Enter Your Mobile Number</label>
+<div class="input-with-icon">
+<input type="tel" id="mobileNumber" placeholder="0917 123 4567" />
+<i class="fas fa-phone"></i>
+</div>
+<div class="error-message" id="mobileError">Please enter a valid 10-digit mobile number starting with 09</div>
+</div>
+<p style="color: #6b7280; margin-bottom: 20px; font-size: 14px;">We'll send a 6-digit OTP to verify your mobile number. This will be used as your primary login and contact number.</p>
+<button class="btn" id="sendOTPBtn">Send OTP <i class="fas fa-paper-plane"></i></button>
+<div style="text-align: center; margin-top: 20px; color: #6b7280; font-size: 14px;"><p>For demo purposes, any valid Philippine mobile number will work</p></div>
+</div>
+
+<!-- View 2: OTP Verification -->
+<div class="view-container" id="view2">
+<div class="section-title"><i class="fas fa-key"></i><span>OTP Verification</span></div>
+<div class="mobile-display">
+<div class="label">OTP sent to:</div>
+<div class="number" id="displayMobileNumber">0917 123 4567</div>
+<button class="btn-secondary" id="changeMobileBtn" style="width: auto; padding: 8px 16px; font-size: 14px;"><i class="fas fa-edit"></i> Change Number</button>
+</div>
+<div class="form-group">
+<label for="otpCode">Enter 6-digit OTP</label>
+<div class="input-with-icon">
+<input type="text" id="otpCode" placeholder="Enter OTP" maxlength="6" inputmode="numeric" />
+<i class="fas fa-key"></i>
+</div>
+<div class="error-message" id="otpError">Please enter a valid 6-digit OTP</div>
+</div>
+<div class="timer" id="otpTimer">OTP expires in: <span id="timerCount">02:00</span></div>
+<div class="resend-otp">
+<p style="color: #6b7280; margin-bottom: 10px;">Didn't receive the OTP?</p>
+<a class="resend-link disabled" id="resendOTPLink">Resend OTP in <span id="resendCount">60</span>s</a>
+</div>
+<div class="otp-instruction"><div style="display: flex; align-items: flex-start;"><i class="fas fa-info-circle"></i><div><strong>For Demo Purposes</strong><p style="margin-top: 5px;">Use OTP: <strong>123456</strong> to proceed</p></div></div></div>
+</div>
+
+<!-- View 3: Personal Details -->
+<div class="view-container" id="view3">
+<div class="section-title"><i class="fas fa-user-circle"></i><span>Personal Details</span></div>
+<div class="form-group"><label for="fullName">Full Name</label><input type="text" id="fullName" placeholder="Enter your full name" /></div>
+<div class="form-group"><label for="dob">Date of Birth</label><input type="date" id="dob" /></div>
+<div class="form-group"><label for="email">Email Address</label><input type="email" id="email" placeholder="Enter your email address" /></div>
+<div class="form-group"><label for="address">Full Address</label><input type="text" id="address" placeholder="Enter your complete address" /></div>
+<div class="form-group"><label for="emergencyName">Emergency Contact Name</label><input type="text" id="emergencyName" placeholder="Name of emergency contact" /></div>
+<div class="form-group"><label for="emergencyContact">Emergency Contact Mobile Number</label><input type="tel" id="emergencyContact" placeholder="Emergency contact mobile number" /></div>
+<div class="button-group">
+<button class="btn btn-secondary" id="backToOTP"><i class="fas fa-arrow-left"></i> Back</button>
+<button class="btn" id="continueToVehicle">Continue <i class="fas fa-arrow-right"></i></button>
+</div>
+</div>
+
+<!-- View 4: Vehicle & Service Selection -->
+<div class="view-container" id="view4">
+<div class="section-title"><i class="fas fa-car"></i><span>Vehicle & Service Selection</span></div>
+<div class="form-group">
+<label>Vehicle Type</label>
+<div style="display: flex; gap: 10px; margin-top: 10px;">
+<div class="service-option vehicle-option" data-type="2W"><i class="fas fa-motorcycle"></i><div class="service-name">2-Wheeler</div><div class="service-status">Motorcycle</div></div>
+<div class="service-option vehicle-option" data-type="4W"><i class="fas fa-car"></i><div class="service-name">4-Wheeler</div><div class="service-status">Car</div></div>
+</div>
+</div>
+<div class="form-group">
+<label>Service Type</label>
+<div class="service-options">
+<div class="service-option service-ride" data-service="Ride"><i class="fas fa-car-side"></i><div class="service-name">Ride</div><div class="service-status">Passenger Transport</div></div>
+<div class="service-option taxi" data-service="Taxi"><i class="fas fa-taxi"></i><div class="service-name">Taxi</div><div class="service-status">4W Only</div><span class="service-badge">4W</span></div>
+<div class="service-option disabled" data-service="Send"><i class="fas fa-box"></i><div class="service-name">Send</div><div class="service-status disabled">Coming Soon</div></div>
+<div class="service-option disabled" data-service="Eats"><i class="fas fa-utensils"></i><div class="service-name">Eats</div><div class="service-status disabled">Coming Soon</div></div>
+<div class="service-option disabled" data-service="Mart"><i class="fas fa-shopping-bag"></i><div class="service-name">Mart</div><div class="service-status disabled">Coming Soon</div></div>
+</div>
+</div>
+<div class="button-group">
+<button class="btn btn-secondary" id="backToPersonal"><i class="fas fa-arrow-left"></i> Back</button>
+<button class="btn" id="continueToDocuments">Continue <i class="fas fa-arrow-right"></i></button>
+</div>
+</div>
+
+<!-- View 5: Document Upload -->
+<div class="view-container" id="view5">
+<div class="section-title"><i class="fas fa-file-upload"></i><span>Document Upload</span></div>
+<p style="color: #6b7280; margin-bottom: 14px;">Upload all required documents. Each document can have multiple files (front/back, multi-page). Max file size: 8MB each.</p>
+<div id="taxiSkipDocsNotice" class="age-warning" style="display:none;">
+  <div style="display:flex;align-items:center;"><i class="fas fa-info-circle"></i><div><strong>4W Taxi Requirement Update</strong><p style="margin-top:5px;font-size:14px;">For 4W Taxi applications, OR/CR, Vehicle Photos, and PA/CPC uploads are not required in this prototype flow.</p></div></div>
+</div>
+
+<div class="document-section" id="license-section">
+<div class="document-header"><div class="document-title-row"><div class="document-title">Driver's License</div></div><div class="document-required">Required</div></div>
+<div class="document-description">Upload front and back of your valid driver's license</div>
+<div class="upload-area" data-doc="license"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">Click to upload</div><div class="upload-subtext">JPG, PNG, or PDF (Max 8MB each)</div></div>
+</div>
+
+<!-- OR/CR -->
+<div class="document-section" id="orcr-section">
+<div class="document-header">
+<div class="document-title-row">
+<div class="document-title">OR/CR</div>
+<button class="info-btn" type="button" data-guide="orcr" aria-label="OR/CR guide"><i class="fas fa-info-circle"></i></button>
+</div>
+<div class="document-required">Required</div>
+</div>
+<div class="document-description">Official Receipt & Certificate of Registration</div>
+<div class="form-group" style="margin-bottom: 15px;">
+<label for="ownershipType">Vehicle Ownership Type</label>
+<select id="ownershipType" class="form-control">
+<option value="owned">Owned</option>
+<option value="secondhand">Secondhand</option>
+<option value="notowned">Not Owned (Rented or Borrowed)</option>
+<option value="fleet">Fleet/Company-Owned (Taxi)</option>
+</select>
+</div>
+<div class="ownership-instruction" id="ownedInstruction"><div style="display: flex; align-items: flex-start;"><i class="fas fa-info-circle"></i><div><strong>Upload OR/CR</strong><p style="margin-top: 5px; font-size: 13px;">Upload your Official Receipt (OR) and Certificate of Registration (CR)</p></div></div></div>
+<div class="ownership-instruction" id="secondhandInstruction"><div style="display: flex; align-items: flex-start;"><i class="fas fa-info-circle"></i><div><strong>Upload OR/CR AND supporting documents</strong><p style="margin-top: 5px; font-size: 13px;">Upload OR/CR AND Deed of Sale or Certificate of Sale or Certificate of Repossession</p></div></div></div>
+<div class="ownership-instruction" id="notownedInstruction"><div style="display: flex; align-items: flex-start;"><i class="fas fa-info-circle"></i><div><strong>Upload OR/CR AND authorization documents</strong><p style="margin-top: 5px; font-size: 13px;">Upload OR/CR AND Authorization Letter or Notarized Special Power of Attorney (SPA)</p></div></div></div>
+<div class="ownership-instruction" id="fleetInstruction"><div style="display: flex; align-items: flex-start;"><i class="fas fa-info-circle"></i><div><strong>Fleet/Company-Owned Vehicle</strong><p style="margin-top: 5px; font-size: 13px;">Upload OR/CR AND Certificate of Assignment or Lease Agreement from the taxi operator</p></div></div></div>
+<div class="upload-area" data-doc="orcr"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">Click to upload OR/CR</div><div class="upload-subtext">JPG, PNG, or PDF (Max 8MB each)</div></div>
+<div class="uploaded-files" id="orcr-files"></div>
+<div id="secondhand-additional-section" style="display: none; margin-top: 15px;">
+<div class="document-header"><div class="document-title-row"><div class="document-title">Supporting Docs (Secondhand)</div><button class="info-btn" type="button" data-guide="orcr_secondhand" aria-label="Secondhand supporting docs guide"><i class="fas fa-info-circle"></i></button></div><div class="document-required">Required</div></div>
+<div class="document-description">Upload Deed of Sale or Certificate of Sale or Certificate of Repossession</div>
+<div class="upload-area" data-doc="orcr-secondhand"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">Click to upload additional documents</div><div class="upload-subtext">JPG, PNG, or PDF (Max 8MB each)</div></div>
+<div class="uploaded-files" id="orcr-secondhand-files"></div>
+</div>
+<div id="notowned-additional-section" style="display: none; margin-top: 15px;">
+<div class="document-header"><div class="document-title-row"><div class="document-title">Authorization Docs (Not Owned)</div><button class="info-btn" type="button" data-guide="orcr_notowned" aria-label="Not owned authorization docs guide"><i class="fas fa-info-circle"></i></button></div><div class="document-required">Required</div></div>
+<div class="document-description">Upload Authorization Letter or Notarized Special Power of Attorney (SPA)</div>
+<div class="upload-area" data-doc="orcr-notowned"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">Click to upload authorization documents</div><div class="upload-subtext">JPG, PNG, or PDF (Max 8MB each)</div></div>
+<div class="uploaded-files" id="orcr-notowned-files"></div>
+</div>
+<div id="fleet-additional-section" style="display: none; margin-top: 15px;">
+<div class="document-header"><div class="document-title-row"><div class="document-title">Fleet Assignment Docs</div><button class="info-btn" type="button" data-guide="orcr_fleet" aria-label="Fleet assignment docs guide"><i class="fas fa-info-circle"></i></button></div><div class="document-required">Required</div></div>
+<div class="document-description">Upload Certificate of Assignment or Lease Agreement from taxi operator</div>
+<div class="upload-area" data-doc="orcr-fleet"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">Click to upload assignment documents</div><div class="upload-subtext">JPG, PNG, or PDF (Max 8MB each)</div></div>
+<div class="uploaded-files" id="orcr-fleet-files"></div>
+</div>
+</div>
+
+<!-- NBI Clearance -->
+<div class="document-section">
+<div class="document-header">
+<div class="document-title-row">
+<div class="document-title">NBI Clearance</div>
+<button class="info-btn" type="button" data-guide="nbi" aria-label="NBI guide"><i class="fas fa-info-circle"></i></button>
+</div>
+<div class="document-required">Required</div>
+</div>
+<div class="document-description">National Bureau of Investigation Clearance</div>
+<div class="upload-area" data-doc="nbi"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">Click to upload</div><div class="upload-subtext">JPG, PNG, or PDF (Max 8MB each)</div></div>
+<div class="uploaded-files" id="nbi-files"></div>
+</div>
+
+<!-- Vehicle Photos -->
+<div class="document-section" id="vehicle-section">
+<div class="document-header">
+<div class="document-title-row">
+<div class="document-title">Vehicle Photos</div>
+<button class="info-btn" type="button" data-guide="vehicle" aria-label="Vehicle photos guide"><i class="fas fa-info-circle"></i></button>
+</div>
+<div class="document-required">Required</div>
+</div>
+<div class="document-description">Front and back photos of your vehicle</div>
+<div class="upload-area" data-doc="vehicle"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">Click to upload</div><div class="upload-subtext">JPG or PNG (Max 8MB each)</div></div>
+<div class="uploaded-files" id="vehicle-files"></div>
+</div>
+
+<!-- PA/CPC (4W Only) -->
+<div class="document-section" id="pa-cpc-section">
+<div class="document-header">
+<div class="document-title-row">
+<div class="document-title">PA/CPC (4W Only)</div>
+<button class="info-btn" type="button" data-guide="pa_cpc" aria-label="PA/CPC guide"><i class="fas fa-info-circle"></i></button>
+</div>
+<div class="document-required">Required for 4W</div>
+</div>
+<div class="document-description">Public Authority / Certificate of Public Convenience</div>
+<div class="upload-area" data-doc="pa-cpc"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">Click to upload</div><div class="upload-subtext">JPG, PNG, or PDF (Max 8MB each)</div></div>
+<div class="uploaded-files" id="pa-cpc-files"></div>
+</div>
+
+<!-- Fit to Drive (Conditional) -->
+<div class="document-section" id="fit-to-drive-section">
+<div class="document-header">
+<div class="document-title-row">
+<div class="document-title">Fit to Drive Certificate</div>
+<button class="info-btn" type="button" data-guide="fit_to_drive" aria-label="Fit to drive guide"><i class="fas fa-info-circle"></i></button>
+</div>
+<div class="document-required conditional">Conditional</div>
+</div>
+<div class="document-description">Required if 4W & age ≥ 60, or 2W & age ≥ 55</div>
+<div class="upload-area" data-doc="fit-to-drive"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">Click to upload</div><div class="upload-subtext">JPG, PNG, or PDF (Max 8MB each)</div></div>
+<div class="uploaded-files" id="fit-to-drive-files"></div>
+</div>
+
+<div class="document-section" id="taxi-documents-section">
+<div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+<div style="display: flex; align-items: center; gap: 10px;">
+<i class="fas fa-taxi" style="color: #f59e0b; font-size: 20px;"></i>
+<div>
+<strong style="color: #92400e;">Taxi-Specific Requirements</strong>
+<p style="font-size: 13px; color: #78350f; margin-top: 4px;">These documents are required for taxi driver verification. All fields must be completed before submission.</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Medical Exam with Drug Test -->
+<div class="document-section taxi-only">
+<div class="document-header">
+<div class="document-title-row">
+<div class="document-title">Medical Exam (with Drug Test)</div>
+<button class="info-btn" type="button" data-guide="medical_exam" aria-label="Medical exam guide"><i class="fas fa-info-circle"></i></button>
+</div>
+<div class="document-required taxi">Required for Taxi</div>
+</div>
+<div class="document-description">Upload your medical certificate that includes drug test results. Must be issued within the last 6 months.</div>
+<div class="upload-area" data-doc="medical-exam"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">Click to upload medical certificate</div><div class="upload-subtext">JPG, PNG, or PDF (Max 8MB each)</div></div>
+<div class="uploaded-files" id="medical-exam-files"></div>
+</div>
+
+<!-- SSS -->
+<div class="document-section taxi-only">
+<div class="document-header">
+<div class="document-title-row">
+<div class="document-title">SSS Number</div>
+<button class="info-btn" type="button" data-guide="sss" aria-label="SSS guide"><i class="fas fa-info-circle"></i></button>
+</div>
+<div class="document-required taxi">Required for Taxi</div>
+</div>
+<div class="document-description">Enter your SSS number manually OR upload a photo of your SSS ID/card</div>
+<div class="gov-number-toggle">
+<button class="gov-toggle-btn active" data-target="sss-input">Enter Manually</button>
+<button class="gov-toggle-btn" data-target="sss-upload">Upload Document</button>
+</div>
+<div class="gov-number-input" id="sss-input">
+<input type="text" id="sssNumber" placeholder="Enter SSS Number (e.g., 03-1234567-8)" maxlength="12" />
+<div class="gov-number-hint">Format: XX-XXXXXXX-X</div>
+</div>
+<div class="gov-number-upload" id="sss-upload">
+<div class="upload-area" data-doc="sss"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">Click to upload SSS ID/Card</div><div class="upload-subtext">JPG, PNG, or PDF (Max 8MB)</div></div>
+<div class="uploaded-files" id="sss-files"></div>
+</div>
+</div>
+
+<!-- TIN -->
+<div class="document-section taxi-only">
+<div class="document-header">
+<div class="document-title-row">
+<div class="document-title">TIN Number</div>
+<button class="info-btn" type="button" data-guide="tin" aria-label="TIN guide"><i class="fas fa-info-circle"></i></button>
+</div>
+<div class="document-required taxi">Required for Taxi</div>
+</div>
+<div class="document-description">Enter your TIN manually OR upload a photo of your TIN card/ID</div>
+<div class="gov-number-toggle">
+<button class="gov-toggle-btn active" data-target="tin-input">Enter Manually</button>
+<button class="gov-toggle-btn" data-target="tin-upload">Upload Document</button>
+</div>
+<div class="gov-number-input" id="tin-input">
+<input type="text" id="tinNumber" placeholder="Enter TIN (e.g., 123-456-789-000)" maxlength="15" />
+<div class="gov-number-hint">Format: XXX-XXX-XXX-XXX</div>
+</div>
+<div class="gov-number-upload" id="tin-upload">
+<div class="upload-area" data-doc="tin"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">Click to upload TIN Card</div><div class="upload-subtext">JPG, PNG, or PDF (Max 8MB)</div></div>
+<div class="uploaded-files" id="tin-files"></div>
+</div>
+</div>
+
+<!-- PAG-IBIG -->
+<div class="document-section taxi-only">
+<div class="document-header">
+<div class="document-title-row">
+<div class="document-title">PAG-IBIG Number</div>
+<button class="info-btn" type="button" data-guide="pagibig" aria-label="PAG-IBIG guide"><i class="fas fa-info-circle"></i></button>
+</div>
+<div class="document-required taxi">Required for Taxi</div>
+</div>
+<div class="document-description">Enter your PAG-IBIG MID number manually OR upload a photo of your PAG-IBIG ID</div>
+<div class="gov-number-toggle">
+<button class="gov-toggle-btn active" data-target="pagibig-input">Enter Manually</button>
+<button class="gov-toggle-btn" data-target="pagibig-upload">Upload Document</button>
+</div>
+<div class="gov-number-input" id="pagibig-input">
+<input type="text" id="pagibigNumber" placeholder="Enter PAG-IBIG MID No." maxlength="12" />
+<div class="gov-number-hint">12-digit MID number</div>
+</div>
+<div class="gov-number-upload" id="pagibig-upload">
+<div class="upload-area" data-doc="pagibig"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">Click to upload PAG-IBIG ID</div><div class="upload-subtext">JPG, PNG, or PDF (Max 8MB)</div></div>
+<div class="uploaded-files" id="pagibig-files"></div>
+</div>
+</div>
+
+<!-- PhilHealth -->
+<div class="document-section taxi-only">
+<div class="document-header">
+<div class="document-title-row">
+<div class="document-title">PhilHealth Number</div>
+<button class="info-btn" type="button" data-guide="philhealth" aria-label="PhilHealth guide"><i class="fas fa-info-circle"></i></button>
+</div>
+<div class="document-required taxi">Required for Taxi</div>
+</div>
+<div class="document-description">Enter your PhilHealth number manually OR upload a photo of your PhilHealth ID/card</div>
+<div class="gov-number-toggle">
+<button class="gov-toggle-btn active" data-target="philhealth-input">Enter Manually</button>
+<button class="gov-toggle-btn" data-target="philhealth-upload">Upload Document</button>
+</div>
+<div class="gov-number-input" id="philhealth-input">
+<input type="text" id="philhealthNumber" placeholder="Enter PhilHealth No. (e.g., 12-345678901-2)" maxlength="15" />
+<div class="gov-number-hint">Format: XX-XXXXXXXXX-X</div>
+</div>
+<div class="gov-number-upload" id="philhealth-upload">
+<div class="upload-area" data-doc="philhealth"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">Click to upload PhilHealth ID</div><div class="upload-subtext">JPG, PNG, or PDF (Max 8MB)</div></div>
+<div class="uploaded-files" id="philhealth-files"></div>
+</div>
+</div>
+</div>
+<!-- END TAXI-SPECIFIC -->
+
+<!-- Previous App Experience (Optional) -->
+<div class="document-section">
+<div class="document-header">
+<div class="document-title-row">
+<div class="document-title">Previous App Experience (Optional)</div>
+<button class="info-btn" type="button" data-guide="previous_experience" aria-label="Previous experience guide"><i class="fas fa-info-circle"></i></button>
+</div>
+<div class="document-required optional">Optional</div>
+</div>
+<div class="document-description">If you have previous experience in other apps, you may upload screenshot/s of your profile from the different app/s.</div>
+<div class="upload-area" data-doc="previous-experience"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">Click to upload</div><div class="upload-subtext">JPG, PNG, or PDF (Max 8MB each)</div></div>
+<div class="uploaded-files" id="previous-experience-files"></div>
+</div>
+
+<div id="validation-summary"></div>
+<div class="error-message" id="documentsError" style="margin-top: 20px; text-align: center;">Please upload all required documents before submitting</div>
+<div class="button-group">
+<button class="btn btn-secondary" id="backToVehicle"><i class="fas fa-arrow-left"></i> Back</button>
+<button class="btn" id="submitForReview">Submit for Review <i class="fas fa-paper-plane"></i></button>
+</div>
+</div>
+
+<!-- View 6: Pending Verification -->
+<div class="view-container" id="view6">
+<div class="status-screen">
+<div class="status-icon"><i class="fas fa-clock"></i></div>
+<h2 class="status-title">Application Submitted</h2>
+<p class="status-description">Your application is now pending verification by our Compliance team. This usually takes 24-48 hours. You'll be notified once your application is reviewed.</p>
+<div class="summary-card" id="submissionSummaryView6"></div>
+</div>
+</div>
+
+<!-- View 7: Document Rejected -->
+<div class="view-container" id="view7">
+<div class="status-screen">
+<div class="status-icon warning"><i class="fas fa-exclamation-triangle"></i></div>
+<h2 class="status-title">Documents Need Reupload</h2>
+<p class="status-description">Our Compliance team has reviewed your documents and found issues that need correction. Please reupload the documents listed below with the required corrections.</p>
+<div class="button-group"><button class="btn btn-success" id="resubmitForReview">Resubmit for Review <i class="fas fa-redo"></i></button></div>
+</div>
+</div>
+
+<!-- View 8: Resubmitted Successfully -->
+<div class="view-container" id="view8">
+<div class="status-screen">
+<div class="status-icon success"><i class="fas fa-check-circle"></i></div>
+<h2 class="status-title">Resubmitted Successfully</h2>
+<p class="status-description">Your documents have been resubmitted for verification. Our Compliance team will review them again. You'll be notified once the review is complete.</p>
+<div class="summary-card" id="submissionSummaryView8"></div>
+<div class="tc-instruction" style="margin-top: 22px;"><div style="display: flex; align-items: flex-start;"><i class="fas fa-info-circle"></i><div><strong>Next Steps: Training Center Visit</strong><p style="margin-top: 5px;">While the compliance team is reviewing the documents, you may proceed to the following training centers to take orientation and skills assessment.<strong>Click to view details</strong> including schedule, location, and requirements.</p></div></div></div>
+<div class="training-centers">
+<h3 style="margin-bottom: 15px; color: #111827;">Available Training Centers</h3>
+<div class="training-center" data-center="main"><div class="tc-header"><div class="tc-icon"><i class="fas fa-building"></i></div><div style="flex: 1;"><div class="tc-name">Main Training Center</div><div class="tc-address">123 Business District, Makati City</div></div><i class="fas fa-chevron-right" style="color: #9ca3af;"></i></div><div class="tc-schedule"><i class="far fa-calendar-alt"></i>Mon-Fri: 9:00 AM - 5:00 PM</div></div>
+<div class="training-center" data-center="north"><div class="tc-header"><div class="tc-icon"><i class="fas fa-map-marker-alt"></i></div><div style="flex: 1;"><div class="tc-name">North Training Hub</div><div class="tc-address">456 Quezon Avenue, Quezon City</div></div><i class="fas fa-chevron-right" style="color: #9ca3af;"></i></div><div class="tc-schedule"><i class="far fa-calendar-alt"></i>Tue-Sat: 8:00 AM - 4:00 PM</div></div>
+<div class="training-center" data-center="south"><div class="tc-header"><div class="tc-icon"><i class="fas fa-car"></i></div><div style="flex: 1;"><div class="tc-name">South Training Facility</div><div class="tc-address">789 Alabang, Muntinlupa City</div></div><i class="fas fa-chevron-right" style="color: #9ca3af;"></i></div><div class="tc-schedule"><i class="far fa-calendar-alt"></i>Wed-Sun: 10:00 AM - 6:00 PM</div></div>
+</div>
+<div class="contact-info">
+<div class="contact-info-header"><i class="fas fa-headset"></i><div class="contact-info-title">Need Help? Contact Us</div></div>
+<div class="contact-details">
+<div class="contact-item"><div class="contact-label">Hotline:</div><div class="contact-value">(02) 1234-5678</div></div>
+<div class="contact-item"><div class="contact-label">Mobile:</div><div class="contact-value" id="resubmittedMobileNumber">0917 123 4567</div></div>
+<div class="contact-item"><div class="contact-label">Email:</div><div class="contact-value">support@xpressdriver.ph</div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Demo Controls -->
+<div class="demo-controls">
+<div class="demo-panel" id="demoPanel">
+<div class="demo-option" id="demoQuickFill"><div class="demo-label">Quick Fill Demo Data</div><div class="demo-desc">Auto-fill all fields with sample taxi driver data</div></div>
+<div class="demo-option" id="demoTaxiFlow"><div class="demo-label">Taxi Flow Demo</div><div class="demo-desc">Show taxi-specific document requirements</div></div>
+<div class="demo-option active" id="demoNormalFlow"><div class="demo-label">Normal Flow</div><div class="demo-desc">Standard 4W Ride registration</div></div>
+<div class="demo-option" id="demoRejectionFlow"><div class="demo-label">Rejection Flow</div><div class="demo-desc">Simulate document rejection & reupload</div></div>
+<div class="demo-option" id="demoReset"><div class="demo-label">Reset Prototype</div><div class="demo-desc">Clear all data and start over</div></div>
+</div>
+<button class="demo-btn" id="demoToggle"><i class="fas fa-sliders-h"></i>Demo Controls</button>
+</div>
+
+<!-- Modals -->
+<div class="modal-overlay" id="trainingCenterModal">
+<div class="modal">
+<div class="modal-header"><div class="modal-title">Training Center Details</div><button class="modal-close" id="closeModal">&times;</button></div>
+<div class="modal-content">
+<div class="modal-icon" id="modalIcon"><i class="fas fa-building"></i></div>
+<div class="modal-section"><div class="modal-label">Training Center</div><div class="modal-value" id="modalName">Main Training Center</div></div>
+<div class="modal-section"><div class="modal-label">Address</div><div class="modal-value" id="modalAddress">123 Business District, Makati City, Metro Manila</div></div>
+<div class="modal-section"><div class="modal-label">Operating Hours</div><div class="modal-value" id="modalSchedule">Mon-Fri: 9:00 AM - 5:00 PM</div></div>
+<div class="modal-section"><div class="modal-label">Contact Number</div><div class="modal-value" id="modalContact">(02) 1234-5678</div></div>
+<div class="modal-section"><div class="modal-label">Requirements to Bring</div><div class="modal-value" style="font-size: 14px; line-height: 1.5;">• Valid ID (Driver's License)<br />• Printed copy of application<br />• Face mask (required)<br />• Pen for documentation</div></div>
+<div class="modal-section"><div class="modal-label">Estimated Training Duration</div><div class="modal-value">2-3 hours</div></div>
+<button class="modal-button" id="getDirections"><i class="fas fa-directions" style="margin-right: 8px;"></i>Get Directions</button>
+<button class="modal-button secondary" id="saveToCalendar"><i class="far fa-calendar-alt" style="margin-right: 8px;"></i>Save to Calendar</button>
+</div>
+</div>
+</div>
+
+<div class="modal-overlay" id="docGuideModal">
+<div class="modal">
+<div class="modal-header"><div class="modal-title" id="docGuideTitle">Document Guide</div><button class="modal-close" id="closeDocGuide">&times;</button></div>
+<div class="modal-content" id="docGuideContent"></div>
+</div>
+</div>
+
+<div class="modal-overlay" id="filePreviewModal">
+<div class="modal">
+<div class="modal-header"><div class="modal-title" id="filePreviewTitle">File Preview</div><button class="modal-close" id="closeFilePreview">&times;</button></div>
+<div class="modal-content" id="filePreviewContent"></div>
+</div>
+</div>
+
+<script>
+const appState = {
+  currentView: 1, mobileVerified: false, mobileNumber: '', vehicleType: '', serviceType: '',
+  age: 30, ownershipType: 'owned',
+  documents: { license: [], orcr: [], nbi: [], vehicle: [], 'pa-cpc': [], 'fit-to-drive': [], 'medical-exam': [], sss: [], tin: [], pagibig: [], philhealth: [], 'previous-experience': [] },
+  govNumbers: { sss: '', tin: '', pagibig: '', philhealth: '' },
+  govNumberMode: { sss: 'input', tin: 'input', pagibig: 'input', philhealth: 'input' },
+  fileCounters: {}, demoMode: 'normal', otpTimer: 120, resendTimer: 60
+};
+const views = document.querySelectorAll('.view-container');
+const stepCircles = document.querySelectorAll('.step-circle');
+const stepLabels = document.querySelectorAll('.step-label');
+const closeModal = document.getElementById('closeModal');
+const docGuideModal = document.getElementById('docGuideModal');
+const closeDocGuide = document.getElementById('closeDocGuide');
+const docGuideTitle = document.getElementById('docGuideTitle');
+const docGuideContent = document.getElementById('docGuideContent');
+const filePreviewModal = document.getElementById('filePreviewModal');
+const closeFilePreview = document.getElementById('closeFilePreview');
+const filePreviewTitle = document.getElementById('filePreviewTitle');
+const filePreviewContent = document.getElementById('filePreviewContent');
+const demoToggle = document.getElementById('demoToggle');
+const demoPanel = document.getElementById('demoPanel');
+const trainingModal = document.getElementById('trainingCenterModal');
+let otpInterval, resendInterval;
+const trainingCenters = {
+  main: { name: "Main Training Center", address: "123 Business District, Makati City, Metro Manila", schedule: "Mon-Fri: 9:00 AM - 5:00 PM", contact: "(02) 1234-5678", icon: "fa-building" },
+  north: { name: "North Training Hub", address: "456 Quezon Avenue, Quezon City, Metro Manila", schedule: "Tue-Sat: 8:00 AM - 4:00 PM", contact: "(02) 2345-6789", icon: "fa-map-marker-alt" },
+  south: { name: "South Training Facility", address: "789 Alabang, Muntinlupa City, Metro Manila", schedule: "Wed-Sun: 10:00 AM - 6:00 PM", contact: "(02) 3456-7890", icon: "fa-car" }
+};
+
+function svgDataUrl(svg) { return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg); }
+function getDocumentDisplayName(docKey) { return ({license:"Driver's License",orcr:"OR/CR",nbi:"NBI Clearance",vehicle:"Vehicle Photos","pa-cpc":"PA/CPC","fit-to-drive":"Fit to Drive Certificate","medical-exam":"Medical Exam (with Drug Test)",sss:"SSS Number",tin:"TIN Number",pagibig:"PAG-IBIG Number",philhealth:"PhilHealth Number","previous-experience":"Previous App Experience (Optional)"})[docKey] || docKey; }
+function getFileTypeFromName(fileName) { const ext = (fileName.split('.').pop() || '').toLowerCase(); if (['png','jpg','jpeg','webp'].includes(ext)) return 'image'; if (ext === 'pdf') return 'pdf'; return 'unknown'; }
+function getDocPrefix(docKey) { return ({license:"license",orcr:"orcr","orcr-secondhand":"orcr_support","orcr-notowned":"orcr_auth","orcr-fleet":"orcr_fleet",nbi:"nbi",vehicle:"vehicle","pa-cpc":"pa_cpc","fit-to-drive":"fit_to_drive","medical-exam":"medical_exam",sss:"sss",tin:"tin",pagibig:"pagibig",philhealth:"philhealth","previous-experience":"prev_experience","license-reject":"license","orcr-reject":"orcr","medical-exam-reject":"medical_exam"})[docKey] || docKey.replace(/[^a-z0-9_]/gi, "_").toLowerCase(); }
+function getAllowedExtensions(docKey) { return ({license:["png","jpg","pdf"],orcr:["pdf","png","jpg"],"orcr-secondhand":["pdf","png","jpg"],"orcr-notowned":["pdf","png","jpg"],"orcr-fleet":["pdf","png","jpg"],nbi:["pdf","png","jpg"],vehicle:["jpg","png"],"pa-cpc":["pdf","png","jpg"],"fit-to-drive":["pdf","png","jpg"],"medical-exam":["pdf","png","jpg"],sss:["png","jpg","pdf"],tin:["png","jpg","pdf"],pagibig:["png","jpg","pdf"],philhealth:["png","jpg","pdf"],"previous-experience":["png","jpg","pdf"],"license-reject":["png","jpg","pdf"],"orcr-reject":["pdf","png","jpg"],"medical-exam-reject":["pdf","png","jpg"]})[docKey] || ["png","jpg","pdf"]; }
+function nextAlignedFileName(docKey) { const prefix = getDocPrefix(docKey); if (!appState.fileCounters[docKey]) appState.fileCounters[docKey] = 0; appState.fileCounters[docKey] += 1; const exts = getAllowedExtensions(docKey); const ext = exts[Math.floor(Math.random() * exts.length)]; return `${prefix}${appState.fileCounters[docKey]}.${ext}`; }
+function makeGuideImage(docKey, caption, isGood = true) { return svgDataUrl(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="520"><rect width="800" height="520" fill="${isGood ? '#eef2ff' : '#fef2f2'}"/><text x="40" y="70" font-family="Arial" font-size="28" fill="#111827">${getDocumentDisplayName(docKey)}</text><text x="40" y="110" font-family="Arial" font-size="18" fill="#6b7280">${caption}</text></svg>`); }
+const docGuides = {
+  license: { title: "Driver's License", mustShow: ["Front and back","Name + license number readable","Expiration date visible"], tips: ["Use bright lighting"], examples: [{ img: () => makeGuideImage("license", "Good sample", true), caption: "Good example" }, { img: () => makeGuideImage("license", "Bad sample", false), caption: "Bad example" }] },
+  medical_exam: { title: "Medical Exam (with Drug Test)", mustShow: ["Drug test result visible","Issued within 6 months"], tips: ["Upload complete document"], examples: [{ img: () => makeGuideImage("medical-exam", "Complete certificate", true), caption: "Good example" }] },
+  summary_help: { title: "Submission Summary", mustShow: ["Read-only file list"], tips: ["Tap file to preview"], examples: [] }
+};
+
+function openDocGuide(guideKey) {
+const g = docGuides[guideKey]; if (!g) return;
+docGuideTitle.textContent = g.title + " Guide";
+const mustShowHtml = g.mustShow?.length ? `<div class="modal-section"><div class="modal-label">Must show</div><ul class="guide-bullets">${g.mustShow.map(x=>`<li>${x}</li>`).join('')}</ul></div>` : '';
+const tipsHtml = g.tips?.length ? `<div class="modal-section"><div class="modal-label">Tips</div><ul class="guide-bullets">${g.tips.map(x=>`<li>${x}</li>`).join('')}</ul></div>` : '';
+const examplesHtml = g.examples?.length ? `<div class="modal-section"><div class="modal-label">Examples</div><div class="guide-grid">${g.examples.map(ex=>`<div class="guide-card"><img src="${ex.img()}" alt="${ex.caption}"/><div class="caption">${ex.caption}</div></div>`).join('')}</div></div>` : '';
+docGuideContent.innerHTML = `${mustShowHtml}${tipsHtml}${examplesHtml}<div class="modal-section" style="margin-top:10px;"><div class="modal-label">Note</div><div style="font-size:13px;color:#6b7280;line-height:1.5;">This is a demo guide. In production, these example images can be replaced with real photo samples per Compliance standards.</div></div>`;
+docGuideModal.classList.add('active');
+}
+function closeDocGuideModal() { docGuideModal.classList.remove('active'); }
+
+function makeUploadedPreviewImage(docKey, fileName) {
+const title = getDocumentDisplayName(docKey);
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="620"><rect width="900" height="620" fill="#eef2ff"/><text x="50" y="90" font-family="Arial" font-size="30" fill="#111827">${title}</text><text x="50" y="130" font-family="Arial" font-size="18" fill="#6b7280">Preview (demo): ${fileName}</text></svg>`;
+return svgDataUrl(svg);
+}
+
+function openFilePreview(docKey, fileObj) {
+const displayDoc = getDocumentDisplayName(docKey);
+filePreviewTitle.textContent = `${displayDoc} • ${fileObj.name}`;
+const type = fileObj.type || getFileTypeFromName(fileObj.name);
+let bodyHtml = '';
+if (type === 'image') {
+const imgSrc = fileObj.preview || makeUploadedPreviewImage(docKey, fileObj.name);
+bodyHtml = `<div class="preview-wrap"><img src="${imgSrc}" alt="Preview of ${fileObj.name}"/><div class="preview-meta"><div><strong>Document:</strong> ${displayDoc}</div><div><strong>File:</strong> ${fileObj.name}</div><div><strong>Size:</strong> ${fileObj.size} MB</div></div></div>`;
+} else if (type === 'pdf') {
+bodyHtml = `<div class="preview-wrap" style="padding:16px;"><div style="font-weight:800;color:#111827;">PDF Preview (Demo)</div><div style="margin-top:10px;font-size:12px;color:#6b7280;"><strong>Document:</strong> ${displayDoc}<br/><strong>File:</strong> ${fileObj.name}<br/><strong>Size:</strong> ${fileObj.size} MB</div></div>`;
+} else {
+bodyHtml = `<div style="color:#6b7280;font-size:14px;line-height:1.5;">Preview not available for this file type.</div>`;
+}
+filePreviewContent.innerHTML = bodyHtml;
+filePreviewModal.classList.add('active');
+}
+function closeFilePreviewModal() { filePreviewModal.classList.remove('active'); }
+
+function renderSubmissionSummary(containerId) {
+const el = document.getElementById(containerId); if (!el) return;
+el.innerHTML = `<div class="summary-header"><div class="summary-title"><i class="fas fa-clipboard-check" style="color:#4f46e5;"></i> Submission Summary</div><button class="info-btn" type="button" data-guide="summary_help"><i class="fas fa-info-circle"></i></button></div><div class="summary-subtext">Read-only list of uploaded documents and entered information. Tap any file name to preview.</div>`;
+const infoBtn = el.querySelector('button[data-guide="summary_help"]');
+if (infoBtn) infoBtn.addEventListener('click', () => openDocGuide('summary_help'));
+}
+
+function navigateToView(viewNumber) {
+views.forEach(view => view.classList.remove('active'));
+document.getElementById(`view${viewNumber}`)?.classList.add('active');
+appState.currentView = viewNumber;
+updateProgressSteps(viewNumber);
+window.scrollTo(0, 0);
+if (viewNumber === 2) { startOTPTimer(); startResendTimer(); setTimeout(() => document.getElementById('otpCode')?.focus(), 250); }
+else if (viewNumber === 1) { clearTimers(); clearOTPStatus(); setTimeout(() => document.getElementById('mobileNumber')?.focus(), 250); }
+else if (viewNumber === 5) { updateValidationSummary(); }
+else if (viewNumber === 6 || viewNumber === 8) {
+  const pendingEl = document.getElementById('pendingMobileNumber'), resubEl = document.getElementById('resubmittedMobileNumber');
+  if (pendingEl) pendingEl.textContent = appState.mobileNumber;
+  if (resubEl) resubEl.textContent = appState.mobileNumber;
+  renderSubmissionSummary(viewNumber === 6 ? "submissionSummaryView6" : "submissionSummaryView8");
+  document.querySelectorAll('.training-center').forEach(tc => tc.classList.remove('clicked'));
+}
+}
+function isTaxi4W() { return appState.vehicleType === '4W' && appState.serviceType === 'Taxi'; }
+function updateProgressSteps(currentView) {
+let stepNumber = currentView; if (currentView <= 2) stepNumber = 1; else if (currentView === 3) stepNumber = 2; else if (currentView === 4) stepNumber = 3; else if (currentView === 5) stepNumber = 4; else stepNumber = 5;
+stepCircles.forEach((circle, index) => { circle.classList.remove('active', 'completed'); if (index + 1 === stepNumber) circle.classList.add('active'); else if (index + 1 < stepNumber) circle.classList.add('completed'); });
+stepLabels.forEach((label, index) => { label.classList.toggle('active', index + 1 === stepNumber); });
+}
+function sendOTP() {
+  const mobileNumber = document.getElementById('mobileNumber')?.value || '';
+  const cleanNumber = mobileNumber.replace(/\s+/g, '');
+  const mobileError = document.getElementById('mobileError');
+  if (!cleanNumber || cleanNumber.length !== 11 || !cleanNumber.startsWith('09')) { if (mobileError) mobileError.style.display = 'block'; return; }
+  if (mobileError) mobileError.style.display = 'none';
+  appState.mobileNumber = mobileNumber;
+  const dm = document.getElementById('displayMobileNumber');
+  if (dm) dm.textContent = mobileNumber;
+  navigateToView(2);
+}
+function resendOTP() {
+  const resendLink = document.getElementById('resendOTPLink');
+  if (resendLink?.classList.contains('disabled')) return;
+  startOTPTimer();
+  startResendTimer();
+  const otp = document.getElementById('otpCode');
+  if (otp) otp.value = '';
+  document.getElementById('otpError') && (document.getElementById('otpError').style.display = 'none');
+  clearOTPStatus();
+  alert(`New OTP sent to ${appState.mobileNumber}. Demo OTP: 123456`);
+  otp?.focus();
+}
+function validatePersonalDetails() { navigateToView(4); }
+function validateVehicleService() { navigateToView(5); }
+function checkAgeRequirement() {
+const fitToDriveSection = document.getElementById('fit-to-drive-section');
+const ageWarning = document.getElementById('ageWarning');
+const needsFitToDrive = (appState.vehicleType === '4W' && appState.age >= 60) || (appState.vehicleType === '2W' && appState.age >= 55);
+fitToDriveSection?.classList.toggle('hidden', !needsFitToDrive);
+if (ageWarning) ageWarning.style.display = needsFitToDrive ? 'block' : 'none';
+}
+
+function updateValidationSummary() {
+const summary = document.getElementById('validation-summary');
+const requiredDocs = ['license', 'nbi'];
+if (!isTaxi4W()) {
+  requiredDocs.push('orcr', 'vehicle');
+  if (appState.vehicleType === '4W') requiredDocs.push('pa-cpc');
+}
+const needsFitToDrive = (appState.vehicleType === '4W' && appState.age >= 60) || (appState.vehicleType === '2W' && appState.age >= 55);
+if (needsFitToDrive) requiredDocs.push('fit-to-drive');
+if (appState.serviceType === 'Taxi') requiredDocs.push('medical-exam', 'sss', 'tin', 'pagibig', 'philhealth');
+if (appState.ownershipType === 'secondhand') requiredDocs.push('orcr-secondhand');
+if (appState.ownershipType === 'notowned') requiredDocs.push('orcr-notowned');
+if (appState.ownershipType === 'fleet') requiredDocs.push('orcr-fleet');
+
+let missing = [];
+requiredDocs.forEach(doc => {
+if (['sss','tin','pagibig','philhealth'].includes(doc)) {
+if (!appState.govNumbers[doc] && appState.documents[doc]?.length === 0) missing.push(getDocumentDisplayName(doc));
+} else if (!appState.documents[doc] || appState.documents[doc].length === 0) missing.push(getDocumentDisplayName(doc));
+});
+
+const err = document.getElementById('documentsError');
+const submitBtn = document.getElementById('submitForReview');
+if (missing.length === 0) {
+if (summary) summary.innerHTML = '<div class="validation-success"><i class="fas fa-check-circle"></i><div>All required documents uploaded. Ready to submit!</div></div>';
+if (err) err.style.display = 'none';
+if (submitBtn) submitBtn.disabled = false;
+} else {
+if (summary) summary.innerHTML = '';
+if (err) err.style.display = 'block';
+if (submitBtn) submitBtn.disabled = true;
+}
+}
+
+function simulateFileUpload(docKey) {
+const fileName = nextAlignedFileName(docKey);
+const fileSize = (Math.random() * 5 + 1).toFixed(2);
+const fileObj = { id: Date.now().toString(), name: fileName, size: fileSize, type: getFileTypeFromName(fileName), preview: null };
+if (!appState.documents[docKey]) appState.documents[docKey] = [];
+appState.documents[docKey].push(fileObj);
+renderUploadedFiles(docKey);
+updateValidationSummary();
+}
+
+function renderUploadedFiles(docKey) {
+const container = document.getElementById(`${docKey}-files`);
+if (!container) return;
+const files = appState.documents[docKey] || [];
+if (files.length === 0) { container.innerHTML = ''; return; }
+container.innerHTML = files.map(f => `<div class="uploaded-file"><i class="fas fa-file-image"></i><div class="file-name clickable" data-doc="${docKey}" data-fileid="${f.id}">${f.name}</div><div class="file-size">${f.size} MB</div><i class="fas fa-times-circle remove-file" data-doc="${docKey}" data-fileid="${f.id}"></i></div>`).join('');
+container.querySelectorAll('.file-name.clickable').forEach(node => node.addEventListener('click', () => {
+const doc = node.getAttribute('data-doc'), fid = node.getAttribute('data-fileid');
+const fileObj = (appState.documents[doc]||[]).find(x=>x.id===fid);
+if (fileObj) openFilePreview(doc, fileObj);
+}));
+container.querySelectorAll('.remove-file').forEach(node => node.addEventListener('click', (e) => {
+e.stopPropagation();
+const doc = node.getAttribute('data-doc'), fid = node.getAttribute('data-fileid');
+appState.documents[doc] = (appState.documents[doc]||[]).filter(x=>x.id!==fid);
+renderUploadedFiles(doc);
+updateValidationSummary();
+}));
+}
+
+function submitApplication() {
+  updateValidationSummary();
+  const submitBtn = document.getElementById('submitForReview');
+  if (submitBtn?.disabled) { window.scrollTo(0, document.body.scrollHeight); return; }
+  if (submitBtn) submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+  setTimeout(() => { if (submitBtn) submitBtn.innerHTML = 'Submit for Review <i class="fas fa-paper-plane"></i>'; navigateToView(6); }, 1000);
+}
+function showTrainingCenterDetails(centerId) {
+const center = trainingCenters[centerId];
+if (!center) return;
+document.getElementById('modalName') && (document.getElementById('modalName').textContent = center.name);
+document.getElementById('modalAddress') && (document.getElementById('modalAddress').textContent = center.address);
+document.getElementById('modalSchedule') && (document.getElementById('modalSchedule').textContent = center.schedule);
+document.getElementById('modalContact') && (document.getElementById('modalContact').textContent = center.contact);
+document.getElementById('modalIcon') && (document.getElementById('modalIcon').innerHTML = `<i class="fas ${center.icon}"></i>`);
+trainingModal?.classList.add('active');
+}
+function closeTrainingCenterModal() { trainingModal?.classList.remove('active'); }
+
+function updateOwnershipDisplay() {
+['ownedInstruction','secondhandInstruction','notownedInstruction','fleetInstruction'].forEach(id => document.getElementById(id)?.classList.remove('visible'));
+['secondhand-additional-section','notowned-additional-section','fleet-additional-section'].forEach(id => {
+  const node = document.getElementById(id);
+  if (node) node.style.display = 'none';
+});
+if (appState.ownershipType === 'owned') document.getElementById('ownedInstruction')?.classList.add('visible');
+else if (appState.ownershipType === 'secondhand') { document.getElementById('secondhandInstruction')?.classList.add('visible'); const n=document.getElementById('secondhand-additional-section'); if(n) n.style.display='block'; }
+else if (appState.ownershipType === 'notowned') { document.getElementById('notownedInstruction')?.classList.add('visible'); const n=document.getElementById('notowned-additional-section'); if(n) n.style.display='block'; }
+else if (appState.ownershipType === 'fleet') { document.getElementById('fleetInstruction')?.classList.add('visible'); const n=document.getElementById('fleet-additional-section'); if(n) n.style.display='block'; }
+}
+function updateTaxiDocumentsVisibility() {
+  const taxiSection = document.getElementById('taxi-documents-section');
+  const taxiNote = document.getElementById('taxiServiceNote');
+  const taxiMode = isTaxi4W();
+  taxiSection?.classList.toggle('hidden', !taxiMode);
+  if (taxiNote) taxiNote.style.display = taxiMode ? 'block' : 'none';
+  const licenseDesc = document.getElementById('licenseDescription');
+  if (licenseDesc) licenseDesc.textContent = taxiMode ? "Upload front and back of your valid PROFESSIONAL driver's license" : "Upload front and back of your valid driver's license";
+  document.getElementById('license-section')?.classList.toggle('taxi-only', taxiMode);
+  const skipNotice = document.getElementById('taxiSkipDocsNotice');
+  if (skipNotice) skipNotice.style.display = taxiMode ? 'block' : 'none';
+  ['orcr-section', 'vehicle-section', 'pa-cpc-section'].forEach(id => {
+    const node = document.getElementById(id);
+    if (node) node.classList.toggle('hidden', taxiMode);
+  });
+}
+function quickFillDemoData() {
+  document.getElementById('mobileNumber').value = '0917 123 4567';
+  appState.mobileNumber = '0917 123 4567';
+  document.getElementById('fullName').value = 'Juan Dela Cruz';
+  document.getElementById('email').value = 'juan.delacruz@example.com';
+  appState.vehicleType = '4W'; appState.serviceType = 'Taxi'; appState.ownershipType = 'fleet'; appState.age = 35;
+  document.querySelectorAll('.vehicle-option').forEach(opt => opt.classList.remove('selected'));
+  document.querySelector('.vehicle-option[data-type="4W"]')?.classList.add('selected');
+  document.querySelectorAll('.service-option').forEach(opt => opt.classList.remove('selected'));
+  document.querySelector('.service-option[data-service="Taxi"]')?.classList.add('selected');
+  document.getElementById('ownershipType').value = 'fleet';
+  document.getElementById('pa-cpc-section')?.classList.remove('hidden');
+  document.getElementById('taxi-documents-section')?.classList.remove('hidden');
+  document.getElementById('license-section')?.classList.add('taxi-only');
+  updateTaxiDocumentsVisibility();
+  updateValidationSummary();
+}
+function setDemoMode(mode) {
+  appState.demoMode = mode;
+  document.querySelectorAll('.demo-option').forEach(opt => opt.classList.remove('active'));
+  if (mode === 'taxi') { document.getElementById('demoTaxiFlow')?.classList.add('active'); quickFillDemoData(); }
+  else if (mode === 'normal') { document.getElementById('demoNormalFlow')?.classList.add('active'); resetPrototype(); }
+  else if (mode === 'rejection') { document.getElementById('demoRejectionFlow')?.classList.add('active'); quickFillDemoData(); navigateToView(7); }
+}
+function resetPrototype() { window.location.reload(); }
+function startOTPTimer() {
+  clearInterval(otpInterval);
+  appState.otpTimer = 120;
+  const otpInput = document.getElementById('otpCode');
+  if (otpInput) otpInput.disabled = false;
+  otpInterval = setInterval(function() {
+    appState.otpTimer--;
+    if (appState.otpTimer <= 0) {
+      clearInterval(otpInterval);
+      const otpTimer = document.getElementById('otpTimer');
+      if (otpTimer) otpTimer.innerHTML = 'OTP has expired. Please request a new one.';
+      if (otpInput) otpInput.disabled = true;
+      setOTPStatus("error", "OTP expired. Please resend OTP.");
+    } else {
+      const minutes = Math.floor(appState.otpTimer / 60), seconds = appState.otpTimer % 60;
+      const tc = document.getElementById('timerCount');
+      if (tc) tc.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+  }, 1000);
+}
+function startResendTimer() {
+  clearInterval(resendInterval);
+  appState.resendTimer = 60;
+  const resendLink = document.getElementById('resendOTPLink');
+  if (!resendLink) return;
+  resendLink.classList.add('disabled');
+  resendLink.innerHTML = `Resend OTP in <span id="resendCount">${appState.resendTimer}</span>s`;
+  resendInterval = setInterval(function() {
+    appState.resendTimer--;
+    const rc = document.getElementById('resendCount');
+    if (rc) rc.textContent = appState.resendTimer;
+    if (appState.resendTimer <= 0) {
+      clearInterval(resendInterval);
+      resendLink.classList.remove('disabled');
+      resendLink.textContent = 'Resend OTP';
+    }
+  }, 1000);
+}
+function setOTPStatus(type, text) {
+  const box = document.getElementById('otpStatusBox'), textEl = document.getElementById('otpStatusText');
+  if (!box || !textEl) return;
+  box.classList.remove('success','error','pending','show');
+  if (type) box.classList.add(type);
+  box.classList.add('show');
+  const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-spinner';
+  const spin = type === 'pending' ? 'fa-spin' : '';
+  textEl.innerHTML = `<i class="fas ${icon} ${spin}"></i><span>${text}</span>`;
+}
+function clearOTPStatus() {
+  const box = document.getElementById('otpStatusBox');
+  const textEl = document.getElementById('otpStatusText');
+  if (box) box.classList.remove('success','error','pending','show');
+  if (textEl) textEl.innerHTML = '';
+}
+function verifyOTP(isAuto = false) {
+  const otpInput = document.getElementById('otpCode');
+  const otpCode = otpInput?.value || '';
+  const cleanOTP = otpCode.replace(/\D/g, '');
+  if (!otpInput) return;
+  if (otpInput.disabled) { setOTPStatus("error", "OTP expired. Please resend OTP."); return; }
+  if (!cleanOTP || cleanOTP.length !== 6) {
+    document.getElementById('otpError') && (document.getElementById('otpError').style.display = 'block');
+    setOTPStatus("error", "Please enter a valid 6-digit OTP.");
+    return;
+  }
+  if (cleanOTP !== '123456') {
+    document.getElementById('otpError') && (document.getElementById('otpError').style.display = 'block');
+    setOTPStatus("error", "Incorrect OTP. Please try again.");
+    return;
+  }
+  document.getElementById('otpError') && (document.getElementById('otpError').style.display = 'none');
+  setOTPStatus("success", "OTP verified. Continuing...");
+  clearTimers();
+  appState.mobileVerified = true;
+  setTimeout(() => { navigateToView(3); }, isAuto ? 500 : 0);
+}
+function clearTimers() { clearInterval(otpInterval); clearInterval(resendInterval); }
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('sendOTPBtn')?.addEventListener('click', sendOTP);
+  document.getElementById('changeMobileBtn')?.addEventListener('click', () => navigateToView(1));
+  document.getElementById('resendOTPLink')?.addEventListener('click', resendOTP);
+  document.getElementById('backToOTP')?.addEventListener('click', () => navigateToView(2));
+  document.getElementById('continueToVehicle')?.addEventListener('click', validatePersonalDetails);
+  document.getElementById('backToPersonal')?.addEventListener('click', () => navigateToView(3));
+  document.getElementById('continueToDocuments')?.addEventListener('click', validateVehicleService);
+  document.getElementById('backToVehicle')?.addEventListener('click', () => navigateToView(4));
+  document.getElementById('submitForReview')?.addEventListener('click', submitApplication);
+  document.getElementById('resubmitForReview')?.addEventListener('click', () => navigateToView(8));
+  document.querySelectorAll('.info-btn[data-guide]').forEach(btn => btn.addEventListener('click', () => openDocGuide(btn.getAttribute('data-guide'))));
+  closeDocGuide?.addEventListener('click', closeDocGuideModal);
+  closeFilePreview?.addEventListener('click', closeFilePreviewModal);
+  demoToggle?.addEventListener('click', () => demoPanel.classList.toggle('show'));
+  document.getElementById('demoQuickFill')?.addEventListener('click', quickFillDemoData);
+  document.getElementById('demoTaxiFlow')?.addEventListener('click', () => setDemoMode('taxi'));
+  document.getElementById('demoNormalFlow')?.addEventListener('click', () => setDemoMode('normal'));
+  document.getElementById('demoRejectionFlow')?.addEventListener('click', () => setDemoMode('rejection'));
+  document.getElementById('demoReset')?.addEventListener('click', resetPrototype);
+  document.querySelectorAll('.training-center').forEach(center => center.addEventListener('click', function() {
+    const centerId = this.getAttribute('data-center');
+    showTrainingCenterDetails(centerId);
+    document.querySelectorAll('.training-center').forEach(tc => tc.classList.remove('clicked'));
+    this.classList.add('clicked');
+  }));
+  closeModal?.addEventListener('click', closeTrainingCenterModal);
+  document.getElementById('getDirections')?.addEventListener('click', () => alert("In the actual app, this would open maps for directions."));
+  document.getElementById('saveToCalendar')?.addEventListener('click', () => alert("Training center schedule saved to your calendar!"));
+  trainingModal?.addEventListener('click', (e) => { if (e.target === trainingModal) closeTrainingCenterModal(); });
+  document.querySelectorAll('.vehicle-option').forEach(option => option.addEventListener('click', function() {
+    document.querySelectorAll('.vehicle-option').forEach(opt => opt.classList.remove('selected'));
+    this.classList.add('selected');
+    appState.vehicleType = this.getAttribute('data-type');
+    checkAgeRequirement();
+    updateTaxiDocumentsVisibility();
+    updateValidationSummary();
+  }));
+  document.querySelectorAll('.service-option:not(.disabled)').forEach(option => option.addEventListener('click', function() {
+    document.querySelectorAll('.service-option').forEach(opt => opt.classList.remove('selected'));
+    this.classList.add('selected');
+    appState.serviceType = this.getAttribute('data-service');
+    updateTaxiDocumentsVisibility();
+    updateValidationSummary();
+  }));
+  document.getElementById('ownershipType')?.addEventListener('change', function() { appState.ownershipType = this.value; updateOwnershipDisplay(); updateValidationSummary(); });
+  document.querySelectorAll('.upload-area').forEach(area => area.addEventListener('click', function() {
+    const docType = this.getAttribute('data-doc');
+    if (docType) simulateFileUpload(docType);
+  }));
+  document.querySelectorAll('.gov-number-toggle').forEach(toggle => {
+    const buttons = toggle.querySelectorAll('.gov-toggle-btn');
+    buttons.forEach(btn => btn.addEventListener('click', () => {
+      buttons.forEach(b => b.classList.remove('active')); btn.classList.add('active');
+      const wrap = toggle.parentElement;
+      wrap.querySelectorAll('.gov-number-input, .gov-number-upload').forEach(el => { el.classList.add('hidden'); el.style.display = 'none'; });
+      const target = wrap.querySelector('#' + btn.dataset.target); if (target) { target.classList.remove('hidden'); target.style.display = 'block'; }
+      const docKey = btn.dataset.target.replace('-input','').replace('-upload','');
+      appState.govNumberMode[docKey] = btn.dataset.target.endsWith('-input') ? 'input' : 'upload';
+      updateValidationSummary();
+    }));
+  });
+  ['sss','tin','pagibig','philhealth'].forEach(key => {
+    const input = document.getElementById(`${key}Number`);
+    if (input) input.addEventListener('input', e => { appState.govNumbers[key] = e.target.value.replace(/[^0-9-]/g, ''); e.target.value = appState.govNumbers[key]; updateValidationSummary(); });
+  });
+  ['mobileNumber','emergencyContact'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, '');
+      if (value.length > 0) {
+        value = value.substring(0, 11);
+        if (value.length > 4 && value.length <= 7) value = value.substring(0, 4) + ' ' + value.substring(4);
+        else if (value.length > 7) value = value.substring(0, 4) + ' ' + value.substring(4, 7) + ' ' + value.substring(7);
+      }
+      e.target.value = value;
+    });
+  });
+  document.getElementById('otpCode')?.addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 6) value = value.substring(0, 6);
+    e.target.value = value;
+    clearOTPStatus();
+    if (value.length === 6) {
+      setOTPStatus("pending", "Checking OTP...");
+      setTimeout(() => verifyOTP(true), 350);
+    }
+  });
+  updateOwnershipDisplay();
+  updateTaxiDocumentsVisibility();
+  updateValidationSummary();
+});
+</script>
+</body>
+</html>
